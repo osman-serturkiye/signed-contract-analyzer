@@ -24,6 +24,14 @@ public class OcrClient {
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build();
     }
 
+    /** Package-private constructor for testing (allows injecting a mock HttpClient). */
+    OcrClient(String baseUrl, String apiKey, String adapter, HttpClient http) {
+        this.baseUrl = baseUrl.replaceAll("/$", "");
+        this.apiKey = apiKey;
+        this.adapter = adapter.toLowerCase();
+        this.http = http;
+    }
+
     public PageOcrResult performOcr(PageImage pageImage, String language) throws ContractAnalysisException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {

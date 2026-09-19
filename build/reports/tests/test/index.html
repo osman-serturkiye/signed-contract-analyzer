@@ -20,13 +20,13 @@
 <tr>
 <td>
 <div class="infoBox" id="tests">
-<div class="counter">18</div>
+<div class="counter">33</div>
 <p>tests</p>
 </div>
 </td>
 <td>
 <div class="infoBox" id="failures">
-<div class="counter">0</div>
+<div class="counter">28</div>
 <p>failures</p>
 </div>
 </td>
@@ -38,7 +38,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">1.349s</div>
+<div class="counter">32.121s</div>
 <p>duration</p>
 </div>
 </td>
@@ -47,8 +47,8 @@
 </div>
 </td>
 <td>
-<div class="infoBox success" id="successRate">
-<div class="percent">100%</div>
+<div class="infoBox failures" id="successRate">
+<div class="percent">15%</div>
 <p>successful</p>
 </div>
 </td>
@@ -58,13 +58,133 @@
 <div id="tabs">
 <ul class="tabLinks">
 <li>
-<a href="#tab0">Packages</a>
+<a href="#tab0">Failed tests</a>
 </li>
 <li>
-<a href="#tab1">Classes</a>
+<a href="#tab1">Packages</a>
+</li>
+<li>
+<a href="#tab2">Classes</a>
 </li>
 </ul>
 <div id="tab0" class="tab">
+<h2>Failed tests</h2>
+<ul class="linkList">
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">AiClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html#ai_401_immediate()">401 -&gt; immediate ContractAnalysisException, no retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">AiClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html#ai_429_exhausts_retries()">429 four times -&gt; ContractAnalysisException after max retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">AiClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html#ai_500_retry_then_success()">500 once then 200 -&gt; succeeds after 1 retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">AiClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html#ai_sends_authorization_header()">sends Authorization header with API key</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">AiClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html#ai_success_changes_null()">200 with changes=null -&gt; parsed as null (service access failure)</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">AiClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html#ai_success_changes_true()">200 with changes=true -&gt; parsed correctly</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageCrop_401_immediate()">crop 401 -&gt; immediate ContractAnalysisException, no retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageCrop_429_retry_then_success()">crop 429 twice then 200 -&gt; succeeds after 2 retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageCrop_sends_authorization_header()">crop sends Authorization header with API key</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageCrop_success()">crop 200 -&gt; returns base64 image string</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageStitch_401_immediate()">stitch 401 -&gt; immediate ContractAnalysisException, no retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageStitch_500_exhausts_retries()">stitch 500 four times -&gt; ContractAnalysisException after max retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">ImageClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html#imageStitch_success()">stitch 200 -&gt; returns stitched base64 image string</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_401_immediate_exception()">401 -&gt; immediate ContractAnalysisException, no retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_429_retry_then_success()">429 twice then 200 -&gt; succeeds after 2 retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_500_exhausts_retries()">500 four times -&gt; ContractAnalysisException after max retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_503_retry_then_success()">503 once then 200 -&gt; succeeds after 1 retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_null_confidence_block()">null confidence in OCR block -&gt; parsed as null</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_sends_authorization_header()">Authorization header contains correct API key</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">OcrClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html#ocr_success_parses_result()">200 -&gt; parses OcrResult correctly</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportHtml_401_immediate()">generateHtml 401 -&gt; immediate ContractAnalysisException, no retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportHtml_429_retry_then_success()">generateHtml 429 twice then 200 -&gt; succeeds after 2 retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportHtml_500_exhausts_retries()">generateHtml 500 four times -&gt; ContractAnalysisException after max retries</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportHtml_sends_authorization_header()">generateHtml sends Authorization header with API key</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportHtml_success()">generateHtml 200 -&gt; returns HTML string</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportPdf_401_immediate()">generatePdf 401 -&gt; immediate ContractAnalysisException, no retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportPdf_503_retry_then_success()">generatePdf 503 once then 200 -&gt; succeeds after 1 retry</a>
+</li>
+<li>
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">ReportClient</a>.
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html#reportPdf_success()">generatePdf 200 -&gt; returns PDF bytes</a>
+</li>
+</ul>
+</div>
+<div id="tab1" class="tab">
 <h2>Packages</h2>
 <table>
 <thead>
@@ -79,19 +199,19 @@
 </thead>
 <tbody>
 <tr>
-<td class="success">
-<a href="packages/com.signedcontract.processor.html">com.signedcontract.processor</a>
+<td class="failures">
+<a href="packages/com.signedcontract.client.html">com.signedcontract.client</a>
 </td>
-<td>18</td>
+<td>33</td>
+<td>28</td>
 <td>0</td>
-<td>0</td>
-<td>1.349s</td>
-<td class="success">100%</td>
+<td>32.121s</td>
+<td class="failures">15%</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="tab1" class="tab">
+<div id="tab2" class="tab">
 <h2>Classes</h2>
 <table>
 <thead>
@@ -106,14 +226,44 @@
 </thead>
 <tbody>
 <tr>
-<td class="success">
-<a href="classes/com.signedcontract.processor.PDFProcessorTest.html">com.signedcontract.processor.PDFProcessorTest</a>
+<td class="failures">
+<a href="classes/com.signedcontract.client.HttpClientTest$AiClientTests.html">com.signedcontract.client.HttpClientTest$AiClientTests</a>
 </td>
-<td>18</td>
+<td>7</td>
+<td>6</td>
 <td>0</td>
+<td>7.095s</td>
+<td class="failures">14%</td>
+</tr>
+<tr>
+<td class="failures">
+<a href="classes/com.signedcontract.client.HttpClientTest$ImageClientTests.html">com.signedcontract.client.HttpClientTest$ImageClientTests</a>
+</td>
+<td>8</td>
+<td>7</td>
 <td>0</td>
-<td>1.349s</td>
-<td class="success">100%</td>
+<td>7.063s</td>
+<td class="failures">12%</td>
+</tr>
+<tr>
+<td class="failures">
+<a href="classes/com.signedcontract.client.HttpClientTest$OcrClientTests.html">com.signedcontract.client.HttpClientTest$OcrClientTests</a>
+</td>
+<td>9</td>
+<td>7</td>
+<td>0</td>
+<td>8.173s</td>
+<td class="failures">22%</td>
+</tr>
+<tr>
+<td class="failures">
+<a href="classes/com.signedcontract.client.HttpClientTest$ReportClientTests.html">com.signedcontract.client.HttpClientTest$ReportClientTests</a>
+</td>
+<td>9</td>
+<td>8</td>
+<td>0</td>
+<td>9.790s</td>
+<td class="failures">11%</td>
 </tr>
 </tbody>
 </table>
@@ -126,7 +276,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.5</a> at Sep 19, 2026, 5:25:17 PM</p>
+<a href="http://www.gradle.org">Gradle 8.5</a> at Sep 19, 2026, 9:18:27 PM</p>
 </div>
 </div>
 </body>

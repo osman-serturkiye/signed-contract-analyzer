@@ -17,6 +17,13 @@ public class AiClient {
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build();
     }
 
+    /** Package-private constructor for testing (allows injecting a mock HttpClient). */
+    AiClient(String baseUrl, String apiKey, HttpClient http) {
+        this.baseUrl = baseUrl.replaceAll("/$", "");
+        this.apiKey = apiKey;
+        this.http = http;
+    }
+
     public AiCompareResult compare(String signedContent, String originalContent,
                                    LanguageAnalysis languageAnalysis) throws ContractAnalysisException {
         JSONObject body = new JSONObject();

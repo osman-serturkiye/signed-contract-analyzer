@@ -8,7 +8,7 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
 
 ## Tasks
 
-- [ ] 1. Proje İskeleti ve Build Sistemi Kurulumu
+- [~] 1. Proje İskeleti ve Build Sistemi Kurulumu
   - Java 21 Gradle `build.gradle` dosyasını oluştur: `sourceCompatibility`, `targetCompatibility`, tüm bağımlılıklar (pdfbox, poi-ooxml, java-diff-utils, flexmark-all, openhtmltopdf-pdfbox, jqwik, junit-jupiter, mockito-core)
   - `settings.gradle` ile proje adını `signed-contract-analyzer` olarak ayarla
   - `src/main/java/com/signedcontract/` ve `src/test/java/com/signedcontract/` dizin yapısını oluştur (config/, pipeline/, processor/, ocr/, clause/, diff/, report/, client/, ratelimit/, warning/, model/)
@@ -48,13 +48,13 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Her geçersiz config senaryosunu (negatif margin, hatalı adaptör adı, eksik endpoint) test et
     - _Requirements: 25.1–25.5_
 
-- [ ] 4. PDFProcessor
+- [x] 4. PDFProcessor
   - [x] 4.1 PDFProcessor sınıfını uygula
     - `validate(String pdfPath)`: magic byte kontrolü, şifre tespiti, `MAX_FILE_SIZE_MB` sınırı, 1–500 sayfa kontrolü
     - `convertToPageImages(String pdfPath)`: PDFBox ile 300 DPI `BufferedImage` listesi üretimi
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 22.1, 22.2, 22.4_
 
-  - [ ] 4.2 Property testi: PDF format reddi
+  - [x] 4.2 Property testi: PDF format reddi
     - **Property 1: PDF Format Reddi**
     - **Validates: Requirements 1.1, 1.3**
     - jqwik ile rastgele non-PDF dosya uzantıları/magic byte'ları üretip `validate()` çağrısının her zaman exception fırlattığını doğrula
@@ -73,7 +73,7 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Format kontrolü, şifre tespiti, geçerli PDF testi
     - _Requirements: 1.1–1.6_
 
-- [ ] 5. DocxProcessor
+- [x] 5. DocxProcessor
   - [x] 5.1 DocxProcessor sınıfını uygula
     - `parse(String docxPath)`: XXE korumalı SAX ayrıştırma, `.docx` format + bozukluk kontrolü, `MAX_FILE_SIZE_MB` sınırı
     - Regex + heading stili ile clause sınırı tespiti: `^\d+(\.\d+)*\.?\s` ve `MADDE/Madde` prefix desenleri
@@ -84,24 +84,24 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - `OriginalContract` JSON üretimi: `title`, `clauses`, `additional`
     - _Requirements: 8.1–8.4, 9.1–9.7, 22.3, 29.1, 29.2_
 
-  - [ ] 5.2 Property testi: DOCX clause numarası regex tespiti
+  - [x] 5.2 Property testi: DOCX clause numarası regex tespiti
     - **Property 6: DOCX Clause Numarası Regex Tespiti**
     - **Validates: Requirements 9.2**
     - jqwik ile geçerli madde numaralandırma formatlarını (`"1."`, `"1.1"`, `"MADDE 1"`, `"14.3.2"`) üretip DocxProcessor'ın her birini yeni clause başlangıcı olarak tanıdığını doğrula
 
-  - [ ] 5.3 Property testi: Yinelenen madde numarası benzersizlik garantisi
+  - [x] 5.3 Property testi: Yinelenen madde numarası benzersizlik garantisi
     - **Property 13: Yinelenen Madde Numarası Benzersizlik Garantisi**
     - **Validates: Requirements 29.2**
     - jqwik ile çakışan clause numaraları içeren girdiler üretip çıktı anahtarlarının (`"5"`, `"5-duplicate-1"`) her zaman benzersiz olduğunu doğrula
 
-  - [ ] 5.4 DocxProcessorTest birim testlerini yaz
+  - [-] 5.4 DocxProcessorTest birim testlerini yaz
     - XXE güvenliği, clause ayrıştırma, Markdown çıktı, `additional` bölümü
     - _Requirements: 8.1–8.4, 9.1–9.7_
 
-- [ ] 6. Checkpoint — Java temel bileşenleri
+- [~] 6. Checkpoint — Java temel bileşenleri
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Python FastAPI Mikroservis — Temel Altyapı
+- [x] 7. Python FastAPI Mikroservis — Temel Altyapı
   - [x] 7.1 FastAPI uygulamasını ve /health endpoint'ini oluştur
     - `python-service/main.py`: FastAPI app, lifespan, CORS, global hata yönetimi, request body boyut sınırı (413 desteği)
     - `python-service/routers/health.py`: `/health` GET → `{"status": "ok"}` 200, auth gerektirmez
@@ -109,11 +109,11 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - `python-service/config.py`: `.env` okuma, zorunlu değer doğrulama
     - _Requirements: 4.9, 4.10, 27.1, 27.2, 27.3, 22.5_
 
-  - [ ] 7.2 Health endpoint birim testini yaz
+  - [~] 7.2 Health endpoint birim testini yaz
     - `/health` GET → 200 `{"status": "ok"}` yanıtını ve auth gerektirmediğini test et
     - _Requirements: 27.1–27.3_
 
-- [ ] 8. Python OCR Adaptörleri ve /ocr/* Endpoint'leri
+- [x] 8. Python OCR Adaptörleri ve /ocr/* Endpoint'leri
   - [x] 8.1 OcrAdapter abstract class ve PaddleOCR + Surya adaptörlerini oluştur
     - `adapters/ocr/base.py`: `OcrAdapter` abstract class (`perform_ocr`, `get_adapter_name`)
     - `adapters/ocr/paddleocr_adapter.py`: PP-StructureV3 pipeline; layout analizi, tablo, çok sütun okuma sırası, Markdown çıktı
@@ -129,11 +129,11 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - `routers/ocr.py`'ye `/ocr/azure`, `/ocr/foundry`, `/ocr/mistral` endpoint'lerini ekle
     - _Requirements: 4.2, 4.4, 15.1, 15.2_
 
-  - [ ] 8.3 OCR endpoint birim testlerini yaz
+  - [-] 8.3 OCR endpoint birim testlerini yaz
     - Mock OCR motoru ile `OcrResponse` yapısını, 401 davranışını, 503 fallback'i test et
     - _Requirements: 4.9–4.14_
 
-- [ ] 9. Python Image Servisi ve /image/* Endpoint'leri
+- [x] 9. Python Image Servisi ve /image/* Endpoint'leri
   - [x] 9.1 ImageService ve /image/crop + /image/stitch endpoint'lerini oluştur
     - `services/image_service.py`: Pillow ile crop (margin clamp, max_dimension_px yeniden ölçekleme, compression_quality JPEG sıkıştırma) ve stitch (dikey birleştirme, gap_px boşluk)
     - `routers/image.py`: `/image/crop` POST → `CropResponse`; `/image/stitch` POST → `StitchResponse`
@@ -154,12 +154,12 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Erişim hatası → `changes: null` + hata mesajı
     - _Requirements: 11.1–11.9_
 
-  - [ ] 10.2 AI endpoint birim testlerini yaz
+  - [x] 10.2 AI endpoint birim testlerini yaz
     - Başarılı karşılaştırma, servis erişim hatası (`changes: null`), 401 davranışlarını test et
     - _Requirements: 11.7, 11.8_
 
-- [ ] 11. Java HTTP Client'ları (Java→Python Köprüsü)
-  - [ ] 11.1 OcrClient, ImageClient, AiClient, ReportClient sınıflarını uygula
+- [x] 11. Java HTTP Client'ları (Java→Python Köprüsü)
+  - [x] 11.1 OcrClient, ImageClient, AiClient, ReportClient sınıflarını uygula
     - Java 11+ `HttpClient` ile her Python endpoint'ine karşılık gelen metodları yaz
     - `OcrClient.performOcr()`: `/ocr/{adapter}` POST
     - `ImageClient.crop()` ve `ImageClient.stitch()`: `/image/crop`, `/image/stitch` POST
@@ -173,20 +173,20 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Retry mantığı, 401 yayılımı, timeout davranışını test et
     - _Requirements: 23.3, 23.4_
 
-- [ ] 12. RateLimiter
-  - [ ] 12.1 RateLimiter sınıfını uygula
+- [x] 12. RateLimiter
+  - [x] 12.1 RateLimiter sınıfını uygula
     - `Semaphore` tabanlı `submit(Callable<T>)` metodu
     - `shutdown()` metodu
     - `AI_MAX_CONCURRENCY` (varsayılan 5) ve `OCR_MAX_CONCURRENCY` (varsayılan 3) desteği
     - _Requirements: 23.1, 23.2_
 
-  - [ ] 12.2 Property testi: RateLimiter eşzamanlılık üst sınırı
+  - [x] 12.2 Property testi: RateLimiter eşzamanlılık üst sınırı
     - **Property 12: RateLimiter Eşzamanlılık Üst Sınırı**
     - **Validates: Requirements 23.1, 23.2**
     - jqwik ile farklı N değerleri için eş zamanlı çalışan görev sayısının hiçbir zaman N'i aşmadığını doğrula
 
-- [ ] 13. LanguageDetector
-  - [ ] 13.1 LanguageDetector sınıfını uygula
+- [x] 13. LanguageDetector
+  - [x] 13.1 LanguageDetector sınıfını uygula
     - `detect(List<PageImage>)`: İlk sayfada `OcrClient` ile OCR çağrısı
     - X koordinatı boşluk analizi ile dikey sütun tespiti
     - `PRIMARY_LANGUAGE` config override desteği
@@ -194,12 +194,12 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - `LanguageAnalysis` döndür: `multilingual`, `activeLanguage`, `columns`
     - _Requirements: 20.1–20.11_
 
-  - [ ] 13.2 LanguageDetector birim testlerini yaz (OcrClient mock'lanmış)
+  - [~] 13.2 LanguageDetector birim testlerini yaz (OcrClient mock'lanmış)
     - Tek dilli, çok dilli kolon tespiti, PRIMARY_LANGUAGE override senaryolarını test et
     - _Requirements: 20.3, 20.4, 20.5, 20.9_
 
-- [ ] 14. ClauseCoordinateMatcher
-  - [ ] 14.1 ClauseCoordinateMatcher sınıfını uygula
+- [x] 14. ClauseCoordinateMatcher
+  - [x] 14.1 ClauseCoordinateMatcher sınıfını uygula
     - `map(ocrResults, detectedClauses, languageAnalysis)`: Her OCR bloğunun koordinat merkezini clause bbox'larıyla kesişim kontrolü
     - Çok dilli düzende yalnızca `active_language` sütun bbox'ı içindeki blokları dahil et
     - Boş clause → WARN + `content: ""`
@@ -207,32 +207,32 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Tablo/paragraf/metin bloklarını ayrı elementler olarak koru
     - _Requirements: 5.1–5.6, 20.7, 29.2_
 
-  - [ ] 14.2 Property testi: ClauseCoordinateMatcher tekil atama invariantı
+  - [x] 14.2 Property testi: ClauseCoordinateMatcher tekil atama invariantı
     - **Property 4: ClauseCoordinateMatcher Tekil Atama Invariantı**
     - **Validates: Requirements 5.1**
     - jqwik ile rastgele OCR blok ve clause bbox listesi üretip hiçbir bloğun birden fazla clause'a atanmadığını doğrula
 
-  - [ ] 14.3 ClauseCoordinateMatcherTest birim testlerini yaz
+  - [~] 14.3 ClauseCoordinateMatcherTest birim testlerini yaz
     - Bbox kesişim algoritması, sınır koordinatları, boş clause senaryolarını test et
     - _Requirements: 5.1–5.6_
 
-- [ ] 15. Checkpoint — Python servisi + Java istemcileri + Coordinate Matching
+- [~] 15. Checkpoint — Python servisi + Java istemcileri + Coordinate Matching
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. SignatureDetector
-  - [ ] 16.1 SignatureDetector sınıfını uygula
+- [x] 16. SignatureDetector
+  - [x] 16.1 SignatureDetector sınıfını uygula
     - `detect(pageImages, ocrResults)`: OCR bloklarında `type: "signature"` olanları tespit et
     - Her imza bloğu için `ImageClient.crop()` ile görüntü kırp ve Base64 kodla
     - Yakın OCR bloklarından imzacı adını oku; tespit edilemezse `name: ""` + WARN
     - `List<Signer>` döndür
     - _Requirements: 6.1–6.5_
 
-  - [ ] 16.2 SignatureDetector birim testlerini yaz (ImageClient mock'lanmış)
+  - [~] 16.2 SignatureDetector birim testlerini yaz (ImageClient mock'lanmış)
     - İmza tespiti, boş ad fallback, erişilemeyen görüntü senaryolarını test et
     - _Requirements: 6.1–6.5_
 
-- [ ] 17. DiffEngine
-  - [ ] 17.1 DiffEngine sınıfını uygula
+- [x] 17. DiffEngine
+  - [x] 17.1 DiffEngine sınıfını uygula
     - `diff(signedMarkdown, originalMarkdown)`: java-diff-utils ile metin karşılaştırma → `DiffResult(changes, result)`
     - `diffAll(signedClauses, originalClauses, maxConcurrency)`: Tüm clause'lar için toplu diff
     - Aynı içerik → `changes: false`, `result: ""`
@@ -240,22 +240,22 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Yalnızca imzalı/yalnızca orijinal clause işaretlemesi
     - _Requirements: 10.1–10.6_
 
-  - [ ] 17.2 Property testi: DiffEngine değişimsizlik invariantı
+  - [x] 17.2 Property testi: DiffEngine değişimsizlik invariantı
     - **Property 7: DiffEngine Değişimsizlik Invariantı**
     - **Validates: Requirements 10.3**
     - jqwik ile rastgele string'ler için `diff(s, s)` çağrısının her zaman `changes: false, result: ""` döndürdüğünü doğrula
 
-  - [ ] 17.3 Property testi: DiffEngine değişim tespiti
+  - [x] 17.3 Property testi: DiffEngine değişim tespiti
     - **Property 8: DiffEngine Değişim Tespiti**
     - **Validates: Requirements 10.4**
     - jqwik ile `s1 ≠ s2` çiftleri için `diff(s1, s2)` sonucunun her zaman `changes: true` olduğunu doğrula
 
-  - [ ] 17.4 DiffEngineTest birim testlerini yaz
+  - [x] 17.4 DiffEngineTest birim testlerini yaz
     - Özdeş içerik, tek taraflı eksik clause, kısmi değişim senaryolarını test et
     - _Requirements: 10.1–10.6_
 
-- [ ] 18. ReportAssembler
-  - [ ] 18.1 ReportAssembler sınıfını uygula
+- [x] 18. ReportAssembler
+  - [x] 18.1 ReportAssembler sınıfını uygula
     - `assemble(signedContract, originalContract, diffs, aiResults, languageAnalysis, signers)` → `PipelineResult`
     - `getSignedContractJson()`: `title`, `clauses` (content + image), `signers`, `additional`, `language_analysis`
     - `getOriginalContractJson()`: `title`, `clauses` (content), `additional`
@@ -266,39 +266,39 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - JSON round-trip geçerliliği doğrulama
     - _Requirements: 7.1–7.5, 9.7, 12.1–12.6, 16.9–16.12_
 
-  - [ ] 18.2 Property testi: Signed Contract JSON Round-Trip
+  - [x] 18.2 Property testi: Signed Contract JSON Round-Trip
     - **Property 5: Signed Contract JSON Round-Trip**
     - **Validates: Requirements 7.5, 12.6**
     - jqwik ile rastgele `SignedContract` nesneleri üretip serialize → deserialize sonucunun başlangıç ile eşdeğer olduğunu doğrula
 
-  - [ ] 18.3 Property testi: Doğal madde sıralaması invariantı
+  - [x] 18.3 Property testi: Doğal madde sıralaması invariantı
     - **Property 9: Analiz Raporu Doğal Madde Sıralaması**
     - **Validates: Requirements 12.1, 12.4**
     - jqwik ile rastgele sıralı clause anahtar listeleri için `analyze_clauses` anahtarlarının her zaman doğal sırada olduğunu doğrula
 
-  - [ ] 18.4 ReportAssembler birim testlerini yaz
+  - [x] 18.4 ReportAssembler birim testlerini yaz
     - Doğal sıralama, `null` signed_image, JSON geçerliliği, `additional` işleme senaryolarını test et
     - _Requirements: 7.1–7.5, 12.1–12.6_
 
-- [ ] 19. AnalysisPipeline ve WarningCollector
-  - [ ] 19.1 WarningCollector sınıfını uygula
+- [x] 19. AnalysisPipeline ve WarningCollector
+  - [x] 19.1 WarningCollector sınıfını uygula
     - `addWarning(component, severity, message)`, `getWarnings()`, `clear()` metotlarını yaz
     - Thread-safe ekleme (CopyOnWriteArrayList)
     - _Requirements: 13.1–13.4, 24.1–24.4_
 
-  - [ ] 19.2 AnalysisPipeline sınıfını uygula
+  - [x] 19.2 AnalysisPipeline sınıfını uygula
     - 12 adımlı pipeline akışını `execute(pdfPath, docxPath)` içinde orkestre et
     - Adım 10: `CompletableFuture.allOf()` ile `DiffEngine.diffAll()` ve `AiClient` çağrılarını paralel yürüt; `AI_MAX_CONCURRENCY` ve `OCR_MAX_CONCURRENCY` için `RateLimiter` kullan
     - Her bileşen hatasını tabloya göre ele al: kritik → exception, kritik olmayan → `WarningCollector`
     - `RETENTION_SECONDS` sonunda geçici dosya temizliği
     - _Requirements: 14.1–14.3, 21.1–21.4, 23.3, 23.4_
 
-  - [ ] 19.3 AnalysisPipeline birim testlerini yaz (tüm bağımlılıklar mock'lanmış)
+  - [~] 19.3 AnalysisPipeline birim testlerini yaz (tüm bağımlılıklar mock'lanmış)
     - Paralel yürütme sırası, hata yayılımı, warning birikimi senaryolarını test et
     - _Requirements: 14.1–14.3_
 
-- [ ] 20. ContractAnalyzer (Public API)
-  - [ ] 20.1 ContractAnalyzer sınıfını uygula
+- [x] 20. ContractAnalyzer (Public API)
+  - [x] 20.1 ContractAnalyzer sınıfını uygula
     - Parametresiz constructor
     - Fluent API: `config()`, `setSignedContractPdf()`, `setOriginalContractDoc()`, `start()` her biri `this` döndürür
     - `start()` durumu: `IDLE → RUNNING → COMPLETED/FAILED`; ikinci `start()` çağrısında `IllegalStateException`
@@ -311,15 +311,15 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - `MAX_RESULT_SIZE_MB` aşımında WARN ekle
     - _Requirements: 16.1–16.14, 17.1, 17.8, 17.9, 18.1, 18.9, 30.1–30.6, 26.3_
 
-  - [ ] 20.2 ContractAnalyzerTest birim testlerini yaz
+  - [x] 20.2 ContractAnalyzerTest birim testlerini yaz
     - Fluent API method chaining, ikinci `start()` çağrısı, `getWarnings()`, fallback akışlarını test et
     - _Requirements: 16.1–16.14_
 
-- [ ] 21. Checkpoint — Pipeline ve Public API
+- [~] 21. Checkpoint — Pipeline ve Public API
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 22. Python Rapor Servisi ve /report/* Endpoint'leri
-  - [ ] 22.1 ReportService ve /report/html + /report/pdf endpoint'lerini oluştur
+- [x] 22. Python Rapor Servisi ve /report/* Endpoint'leri
+  - [x] 22.1 ReportService ve /report/html + /report/pdf endpoint'lerini oluştur
     - `services/report_service.py`: Jinja2 ile `report-template.html` render → HTML; WeasyPrint ile HTML → PDF
     - `routers/report.py`: `/report/html` POST → `text/html; charset=UTF-8`; `/report/pdf` POST → `application/pdf`
     - Pydantic model: `ReportRequest` (`signed_contract`, `original_contract`, `analysis`)
@@ -328,23 +328,23 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - Her endpoint'te ReportServiceApiKey doğrulaması (401 desteği)
     - _Requirements: 4.9, 17.2–17.7, 18.2–18.8_
 
-  - [ ] 22.2 Report endpoint birim testlerini yaz
+  - [~] 22.2 Report endpoint birim testlerini yaz
     - HTML yanıt content-type, PDF binary, 401 davranışı, doğal sıralama, görüntü gömme senaryolarını test et
     - _Requirements: 17.3, 17.4, 18.3, 18.4_
 
 - [ ] 23. Loglama Altyapısı
-  - [ ] 23.1 Java loglama altyapısını yapılandır
+  - [~] 23.1 Java loglama altyapısını yapılandır
     - Java tarafı için `INFO/WARN/ERROR` seviyeli, zaman damgası (ISO-8601) + bileşen adı + mesaj içeren log formatı
     - `LOG_FILE_PATH` yapılandırılmışsa dosyaya + konsola; yapılandırılmamışsa yalnızca konsola yaz
     - `LOG_FORMAT: "json"` seçeneğinde her satır geçerli JSON nesnesi olarak yazılsın
     - _Requirements: 13.1–13.4, 28.1–28.4_
 
-  - [ ] 23.2 Python loglama yapılandırmasını tamamla
+  - [~] 23.2 Python loglama yapılandırmasını tamamla
     - `python-service/config.py`'ye `LOG_LEVEL` ve `LOG_FORMAT` desteği ekle; structured JSON logging
     - _Requirements: 28.5_
 
 - [ ] 24. Entegrasyon Testi
-  - [ ] 24.1 SampleContractIntegrationTest'i yaz
+  - [~] 24.1 SampleContractIntegrationTest'i yaz
     - `samples/sample-01/signed.pdf` ve `samples/sample-01/original.docx` kullanarak tam pipeline testi
     - Python servisi yerine local mock HTTP sunucu ile çalıştır
     - `getResultJson()` çıktısının `signed_contract`, `original_contract`, `analysis` alanlarını içerdiğini doğrula
@@ -352,11 +352,11 @@ Java 21 kütüphanesi + Python FastAPI mikroservisi ikilisini aşamalı olarak i
     - `getWarnings()` çağrısının liste döndürdüğünü doğrula
     - _Requirements: 19.5, 19.7_
 
-  - [ ] 24.2 Entegrasyon testi: Fallback rapor akışı
+  - [~] 24.2 Entegrasyon testi: Fallback rapor akışı
     - Python `/report/html` erişilemez olduğunda flexmark fallback'in devreye girdiğini ve `getWarnings()` listesine ekleme yaptığını test et
     - _Requirements: 30.1–30.4_
 
-- [ ] 25. Son Checkpoint — Tüm Testler
+- [~] 25. Son Checkpoint — Tüm Testler
   - Ensure all tests pass, ask the user if questions arise.
 
 ---

@@ -19,6 +19,13 @@ public class ImageClient {
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build();
     }
 
+    /** Package-private constructor for testing (allows injecting a mock HttpClient). */
+    ImageClient(String baseUrl, String apiKey, HttpClient http) {
+        this.baseUrl = baseUrl.replaceAll("/$", "");
+        this.apiKey = apiKey;
+        this.http = http;
+    }
+
     public String crop(String base64Image, BoundingBox bbox, int margin,
                        Integer maxDimensionPx, Double compressionQuality) throws ContractAnalysisException {
         JSONObject b = new JSONObject();

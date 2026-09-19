@@ -182,9 +182,8 @@ app.include_router(ocr_router.router, prefix="/ocr", tags=["ocr"])
 from routers import ai as ai_router
 app.include_router(ai_router.router, prefix="/ai", tags=["ai"])
 
-# Gelecek görevlerde eklenecek router'lar için yer tutucu:
-# from routers import report
-# app.include_router(report.router, prefix="/report", tags=["report"])
+from routers import report as report_router
+app.include_router(report_router.router, prefix="/report", tags=["report"])
 
 
 # ── Doğrudan çalıştırma (uvicorn) ─────────────────────────────────────────────

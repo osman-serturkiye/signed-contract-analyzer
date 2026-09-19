@@ -17,6 +17,13 @@ public class ReportClient {
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build();
     }
 
+    /** Package-private constructor for testing (allows injecting a mock HttpClient). */
+    ReportClient(String baseUrl, String apiKey, HttpClient http) {
+        this.baseUrl = baseUrl.replaceAll("/$", "");
+        this.apiKey = apiKey;
+        this.http = http;
+    }
+
     public String generateHtml(JSONObject resultJson) throws ContractAnalysisException {
         return postStringWithRetry(baseUrl + "/report/html", resultJson.toString());
     }

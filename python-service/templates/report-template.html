@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<title>{{ title }} — Sözleşme Analiz Raporu</title>
+<style>
+  body { font-family: "Segoe UI", Arial, sans-serif; margin: 24px; color: #222; }
+  h1 { margin-bottom: 4px; }
+  .meta { color: #666; margin-bottom: 20px; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+  th, td { border: 1px solid #ccc; padding: 8px; vertical-align: top; word-wrap: break-word; }
+  th { background: #f2f2f2; text-align: left; }
+  td.clause-no { width: 6%; font-weight: bold; }
+  td.clause-image img { max-width: 100%; }
+  td.changed { background: #fbdcdc; }
+  td.unchanged { background: #ddf5dd; }
+  td.unknown { background: #eee; }
+  .content-cell :is(p, ul, ol, table) { margin: 0 0 6px 0; }
+</style>
+</head>
+<body>
+  <h1>{{ title }}</h1>
+  <div class="meta">Rapor oluşturma zamanı: {{ generated_at }}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Madde No</th>
+        <th>Clause Image</th>
+        <th>Signed Content</th>
+        <th>Original Content</th>
+        <th>Java Diff</th>
+        <th>AI Diff</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="clause-no">{{ row.clause_no }}</td>
+        <td class="clause-image">
+          {% if row.signed_image %}
+            <img src="data:image/jpeg;base64,{{ row.signed_image }}" alt="clause {{ row.clause_no }}"/>
+          {% endif %}
+        </td>
+        <td class="content-cell">{{ row.signed_content_html | safe }}</td>
+        <td class="content-cell">{{ row.original_content_html | safe }}</td>
+        <td class="content-cell {{ row.java_diff_class }}">{{ row.java_diff_html | safe }}</td>
+        <td class="content-cell {{ row.ai_diff_class }}">{{ row.ai_diff_html | safe }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
