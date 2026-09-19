@@ -3,6 +3,7 @@ setlocal enabledelayedexpansion
 
 echo ============================================================
 echo  Signed Contract Analyzer - Python Microservice
+echo  v2.0 - OCR + AI + Image + Report
 echo ============================================================
 echo.
 
@@ -30,18 +31,19 @@ if not exist main.py (
     exit /b 1
 )
 
-REM --- .env'den port oku ---
+REM --- .env'den degerler oku ---
 set SERVICE_PORT=8765
+set SERVICE_API_KEY=change-me-secret-key
+set LOG_LEVEL=INFO
+
 for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
     if "%%a"=="SERVICE_PORT" set SERVICE_PORT=%%b
+    if "%%a"=="SERVICE_API_KEY" set SERVICE_API_KEY=%%b
+    if "%%a"=="LOG_LEVEL" set LOG_LEVEL=%%b
 )
 
 REM --- API key uyarisi ---
-set API_KEY_VALUE=
-for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
-    if "%%a"=="SERVICE_API_KEY" set API_KEY_VALUE=%%b
-)
-if "!API_KEY_VALUE!"=="change-me-secret-key" (
+if "!SERVICE_API_KEY!"=="change-me-secret-key" (
     echo [WARN] SERVICE_API_KEY hala varsayilan deger!
     echo        .env dosyasini duzenleyerek guvenceli bir anahtar belirleyin.
     echo.
@@ -51,12 +53,22 @@ REM --- Activate ---
 call venv\Scripts\activate.bat
 
 echo [OK] Sanal ortam aktive edildi.
+echo [OK] Log seviyesi: %LOG_LEVEL%
+echo.
 echo [>>] Servis baslatiliyor: http://localhost:%SERVICE_PORT%
+echo.
 echo [>>] Endpoint listesi:
-echo       /ocr/paddleocr   - PaddleOCR PP-StructureV3
-echo       /ocr/surya       - Surya OCR 2
-echo       /report/html     - HTML rapor uretimi
-echo       /report/pdf      - PDF rapor uretimi
+echo       GET  /health            - Saglik kontrolu (auth gerektirmez)
+echo       POST /ocr/paddleocr     - PaddleOCR PP-StructureV3
+echo       POST /ocr/surya         - Surya OCR 2
+echo       POST /ocr/azure         - Azure Cognitive Service OCR
+echo       POST /ocr/foundry       - Azure Document Intelligence (Foundry)
+echo       POST /ocr/mistral       - Mistral OCR
+echo       POST /image/crop        - BBox ile goruntu kirpma (Pillow)
+echo       POST /image/stitch      - Cok goruntu dikey birlestirme (Pillow)
+echo       POST /ai/compare        - AI semantik karsilastirma
+echo       POST /report/html       - HTML rapor uretimi (Jinja2)
+echo       POST /report/pdf        - PDF rapor uretimi (WeasyPrint)
 echo.
 echo      Durdurmak icin: Ctrl+C
 echo ============================================================

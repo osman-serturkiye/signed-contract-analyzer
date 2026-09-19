@@ -1,12 +1,15 @@
 @echo off
+setlocal enabledelayedexpansion
+
 echo ============================================================
 echo  Signed Contract Analyzer - Servis Saglik Kontrolu
 echo ============================================================
 echo.
 
-REM --- .env'den port ve key oku ---
+REM --- .env'den degerler oku ---
 set SERVICE_PORT=8765
 set SERVICE_API_KEY=change-me-secret-key
+
 if exist .env (
     for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
         if "%%a"=="SERVICE_PORT" set SERVICE_PORT=%%b
@@ -22,27 +25,51 @@ echo.
 REM curl kontrolu
 curl --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] curl bulunamadi. Windows 10+ ile birlikte gelmelidir.
+    echo [ERROR] curl bulunamadi.
     pause
     exit /b 1
 )
 
-REM /health endpoint
-echo [1/3] /health kontrolu...
+REM --- /health (auth gerektirmez) ---
+echo [1/6] /health kontrolu (auth gerektirmez)...
 curl -s -o nul -w "HTTP Status: %%{http_code}" "%BASE_URL%/health"
 echo.
 
-REM /ocr/paddleocr endpoint (API key ile)
+REM --- /ocr/paddleocr (gecersiz key -> 401 beklenir) ---
 echo.
-echo [2/3] /ocr/paddleocr erisim kontrolu (401 beklenir - gecersiz key)...
+echo [2/6] /ocr/paddleocr erisim kontrolu (401 beklenir)...
 curl -s -o nul -w "HTTP Status: %%{http_code}" ^
      -H "Authorization: Bearer INVALID_KEY" ^
      -X POST "%BASE_URL%/ocr/paddleocr"
 echo.
 
-REM /report/html endpoint (API key ile)
+REM --- /image/crop (gecersiz key -> 401 beklenir) ---
 echo.
-echo [3/3] /report/html erisim kontrolu (401 beklenir - gecersiz key)...
+echo [3/6] /image/crop erisim kontrolu (401 beklenir)...
+curl -s -o nul -w "HTTP Status: %%{http_code}" ^
+     -H "Authorization: Bearer INVALID_KEY" ^
+     -X POST "%BASE_URL%/image/crop"
+echo.
+
+REM --- /image/stitch (gecersiz key -> 401 beklenir) ---
+echo.
+echo [4/6] /image/stitch erisim kontrolu (401 beklenir)...
+curl -s -o nul -w "HTTP Status: %%{http_code}" ^
+     -H "Authorization: Bearer INVALID_KEY" ^
+     -X POST "%BASE_URL%/image/stitch"
+echo.
+
+REM --- /ai/compare (gecersiz key -> 401 beklenir) ---
+echo.
+echo [5/6] /ai/compare erisim kontrolu (401 beklenir)...
+curl -s -o nul -w "HTTP Status: %%{http_code}" ^
+     -H "Authorization: Bearer INVALID_KEY" ^
+     -X POST "%BASE_URL%/ai/compare"
+echo.
+
+REM --- /report/html (gecersiz key -> 401 beklenir) ---
+echo.
+echo [6/6] /report/html erisim kontrolu (401 beklenir)...
 curl -s -o nul -w "HTTP Status: %%{http_code}" ^
      -H "Authorization: Bearer INVALID_KEY" ^
      -X POST "%BASE_URL%/report/html"

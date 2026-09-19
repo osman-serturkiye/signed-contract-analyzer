@@ -44,6 +44,13 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 - **KolonDüzeni**: Sayfanın dikey sütunlara bölündüğü çok dilli sözleşme düzeni; her sütun farklı bir dili temsil eder
 - **DikilKolonBBox**: Çok sütunlu sayfada her sütunun sayfa koordinatlarına göre tanımlanan dikey sınır bölgesi
 - **AktifDil**: Karşılaştırma ve analiz için esas alınan dil; tek dilli sözleşmelerde tek dil, çok dilli sözleşmelerde kullanıcının birincil dili
+- **ImageCropService**: Python microservis bünyesinde çalışan görüntü kırpma bileşeni; Java'dan gelen sayfa görüntüsü + bbox koordinatları + margin parametrelerini alarak kırpılmış clause-image veya imza görüntüsünü Base64 olarak döndüren `/image/crop` endpoint'ini sunar
+- **ImageStitchService**: Çok sayfalı maddeler için birden fazla kırpılmış görüntüyü dikey olarak birleştiren Python bileşeni; `/image/stitch` endpoint'ini sunar
+- **Pillow**: Python'ın görüntü işleme kütüphanesi (PIL fork); ImageCropService ve ImageStitchService tarafından kullanılır
+- **DikkatliSilme (Retention Cleanup)**: Analiz sürecinde üretilen geçici sayfa görüntüleri, kırpılmış clause/imza görüntülerinin, işlem tamamlandıktan sonra yapılandırılabilir bir süre sonunda otomatik silinmesi süreci
+- **RateLimiter**: AiAdapter ve OcrAdapter çağrılarında eşzamanlı istek sayısını sınırlayan bileşen
+- **ConfigValidator**: `config(JSONObject)` ile verilen yapılandırmanın şema, tip ve zorunlu alan doğrulamasını yapan bileşen
+- **AnalysisWarning**: Pipeline sırasında kritik olmayan ama kullanıcıya bildirilmesi gereken durumları (örn. madde tespit edilemedi, imzacı adı okunamadı) temsil eden nesne; `component`, `severity`, `message` alanlarını içerir
 
 ---
 
@@ -80,6 +87,14 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 6. WHEN BoundingBox tespiti tamamlandığında, THE Madde_Tespit_Motoru SHALL her madde için ilgili sayfadan clause-image üretimi amacıyla BoundingBox koordinatlarına BboxMargin değerini ekleyerek kırpma işlemi gerçekleştirmelidir.
 7. WHEN BboxMargin uygulandığında, THE Madde_Tespit_Motoru SHALL hesaplanan kırpma alanının sayfa sınırlarını aşmamasını sağlamalı; aşma durumunda ilgili yöndeki koordinatı sayfa sınırına sabitlenmelidir.
 8. THE Madde_Tespit_Motoru SHALL BboxMargin değerini yapılandırma dosyasından okumalı; yapılandırma dosyasında belirtilmemişse her yön için 5px varsayılan değerini kullanmalıdır.
+9. THE Madde_Tespit_Motoru SHALL clause-image kırpma işlemini doğrudan yapmak yerine Python microservisinin `/image/crop` endpoint'ini çağırmalıdır; Java tarafı sayfa görüntüsünü (Base64), BoundingBox koordinatlarını ve BboxMargin değerini bu endpoint'e göndermeli, dönen kırpılmış görüntüyü Base64 olarak almalıdır.
+10. THE `/image/crop` endpoint'i SHALL şu parametreleri kabul etmelidir:
+    - `image`: Base64 kodlu sayfa görüntüsü
+    - `bbox`: `{ "x": int, "y": int, "width": int, "height": int }` kırpma koordinatları
+    - `margin`: Her yöne eklenecek piksel miktarı (int); sayfa sınırı aşılmamalı
+    - `max_dimension_px`: Opsiyonel; kırpılmış görüntünün uzun kenarının maksimum piksel değeri (Req 26.1 ile uyumlu)
+    - `compression_quality`: Opsiyonel float (0.0–1.0); JPEG kalitesi (Req 26.2 ile uyumlu)
+    Yanıt: `{ "image": "<base64-cropped>", "format": "jpeg" | "png" }`
 
 ---
 
@@ -93,6 +108,12 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 2. WHEN çok sayfalı madde kırpma işlemi tamamlandığında, THE Madde_Tespit_Motoru SHALL kırpılan görüntüleri sayfa sırasına göre dikey olarak birleştirerek tek bir clause-image üretmelidir.
 3. THE Madde_Tespit_Motoru SHALL birleştirilmiş clause-image görüntüsünü Base64 formatında kodlamalıdır.
 4. IF bir sayfanın görüntüsü kırpma işlemi sırasında erişilemez durumdaysa, THEN THE Madde_Tespit_Motoru SHALL bu durumu hata olarak kaydetmeli ve ilgili maddeyi eksik işaretlemelidir.
+5. THE Madde_Tespit_Motoru SHALL çok sayfalı clause için her sayfanın kırpılmış görüntüsünü `/image/crop` endpoint'inden aldıktan sonra, bu görüntüleri dikey birleştirmek için Python microservisinin `/image/stitch` endpoint'ini çağırmalıdır; Java tarafı birden fazla Base64 görüntüyü bu endpoint'e göndermeli, dönen birleştirilmiş görüntüyü Base64 olarak almalıdır.
+6. THE `/image/stitch` endpoint'i SHALL şu parametreleri kabul etmelidir:
+   - `images`: Base64 kodlu görüntülerin sıralı dizisi (sayfa sırasına göre)
+   - `direction`: `"vertical"` (dikey birleştirme; bu proje için sabit)
+   - `gap_px`: Görüntüler arasındaki boşluk pikseli (varsayılan: 2)
+   Yanıt: `{ "image": "<base64-stitched>", "format": "jpeg" | "png" }`
 
 ---
 
@@ -110,7 +131,7 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 6. THE OCR_Motoru SHALL OCR işlemi sonucunda her tanınan bloğun metin içeriğini ve sayfa üzerindeki koordinat bilgisini (word veya line düzeyinde bbox) birlikte döndürmelidir.
 7. THE OCR_Motoru SHALL Türkçe ve İngilizce karakterleri (özel karakterler dahil: ğ, ü, ş, ı, ö, ç) doğru biçimde tanıyabilmelidir.
 8. IF bir sayfa üzerinde OCR işlemi başarısız olursa, THEN THE OCR_Motoru SHALL ilgili sayfaya ait tüm maddelerin içerik alanını boş bırakmalı ve hatayı günlüğe kaydetmelidir.
-9. THE PythonOcrMicroservice SHALL hem PaddleOCR (PP-StructureV3) hem de Surya OCR motorlarını tek bir FastAPI servisi üzerinden sunmalıdır; `/ocr/paddleocr`, `/ocr/surya`, `/report/html` ve `/report/pdf` endpoint'leri erişilebilir olmalıdır.
+9. THE PythonOcrMicroservice SHALL hem PaddleOCR (PP-StructureV3) hem de Surya OCR motorlarını tek bir FastAPI servisi üzerinden sunmalıdır; `/ocr/paddleocr`, `/ocr/surya`, `/image/crop`, `/image/stitch`, `/report/html` ve `/report/pdf` endpoint'leri erişilebilir olmalıdır.
 10. THE PythonOcrMicroservice SHALL her istekte HTTP Authorization header üzerinden OcrServiceApiKey doğrulaması yapmalıdır; geçersiz veya eksik API anahtarıyla gelen istekler 401 Unauthorized yanıtı ile reddedilmelidir.
 11. THE PythonOcrMicroservice SHALL her OCR isteğine karşılık olarak şu yapıda JSON yanıt döndürmelidir:
     - `blocks`: Her bloğun şu alanları içerdiği dizi:
@@ -447,11 +468,11 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 
 4. THE `build.gradle` dosyası SHALL en az aşağıdaki bağımlılıkları içermelidir:
    - `org.json:json` — JSON işleme (JSONObject API)
-   - `net.sourceforge.tess4j:tess4j` — Tesseract OCR adaptörü (Tesseract adaptörü için; PaddleOCR ve Surya Python microservis üzerinden çalışır)
-   - `org.apache.pdfbox:pdfbox` — PDF işleme ve sayfa görüntüsüne dönüştürme
+   - `org.apache.pdfbox:pdfbox` — PDF işleme ve sayfa görüntüsüne dönüştürme (Yalnızca PDF → sayfa görüntüsü dönüşümü için; kırpma/birleştirme Python microservisinde yapılır)
    - `org.apache.poi:poi-ooxml` — Word (.docx) dosyası işleme (Apache POI)
    - `io.github.java-diff-utils:java-diff-utils` — Metin diff analizi
-   - `com.vladsch.flexmark:flexmark-all` — Markdown'dan HTML'e dönüşüm (HTML raporu için — report microservisi kullanılmıyorsa fallback olarak)
+   - `com.vladsch.flexmark:flexmark-all` — Markdown'dan HTML'e dönüşüm (HTML raporu için — yalnızca ReportMicroservice erişilemez durumdaysa Req 26a'da tanımlanan fallback akışında kullanılır)
+   - `com.openhtmltopdf:openhtmltopdf-pdfbox` — flexmark ile üretilen fallback HTML'i PDF'e dönüştürmek için (yalnızca Req 26a fallback akışında kullanılır)
 
 5. THE Proje SHALL `samples/sample-01/signed.pdf` ve `samples/sample-01/original.docx` dosyalarını integration test verisi olarak kullanmalıdır; bu dosyaların yolu `build.gradle` içinde test kaynağı olarak referanslanmalıdır.
 
@@ -485,7 +506,7 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 
 5. THE DilTespitMotoru SHALL çok dilli sözleşmelerde AktifDil'i belirlemek için şu önceliği kullanmalıdır:
    - Config'de `PRIMARY_LANGUAGE` parametresi tanımlanmışsa onu kullanmalı
-   - Tanımlanmamışsa sayfada en fazla alan kaplayan sütunun dilini AktifDil olarak seçmeli
+   - Tanımlanmamışsa sayfada en fazla alan kaplayan sütunun dilini AktifDil olarak seçmeli; iki veya daha fazla sütun tam olarak eşit alan kaplıyorsa, sayfa üzerinde soldan sağa doğru ilk sırada yer alan sütunun dili AktifDil olarak seçilmelidir
 
 6. THE DilTespitMotoru SHALL analiz sonucunu aşağıdaki yapıda JSON olarak üretmeli ve pipeline boyunca tüm bileşenlere iletmelidir:
    ```json
@@ -499,7 +520,7 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
    }
    ```
 
-7. WHEN çok dilli KolonDüzeni tespit edildiğinde, THE Madde_Tespit_Motoru SHALL ClauseCoordinateMapping sırasında yalnızca AktifDil sütununun DikilKolonBBox koordinatları içinde kalan OCR bloklarını clause içeriğine dahil etmelidir; diğer dil sütunlarının blokları dahil edilmemelidir.
+7. WHEN çok dilli KolonDüzeni tespit edildiğinde, THE Madde_Tespit_Motoru SHALL ClauseCoordinateMapping sırasında yalnızca AktifDil sütununun DikilKolonBBox koordinatları içinde kalan OCR bloklarını clause içeriğine dahil etmelidir; diğer dil sütunlarının blokları dahil edilmemelidir. Aynı şekilde, Madde_Tespit_Motoru çok dilli düzende clause-image kırpma işlemini yalnızca AktifDil sütununun DikilKolonBBox sınırları içinde gerçekleştirmelidir; diğer dil sütunlarının görüntü alanı clause-image'e dahil edilmemelidir.
 
 8. WHEN çok dilli KolonDüzeni tespit edildiğinde, THE AI_Karşılaştırıcı SHALL diff prompt'una sözleşmenin çok dilli olduğunu ve AktifDil'in ne olduğunu belirten bir sistem notu eklemelidir.
 
@@ -508,3 +529,137 @@ Bu doküman, imzalı taranmış sözleşmelerin analiz edilmesine yönelik Java 
 10. THE Sistem SHALL config'de `PRIMARY_LANGUAGE` parametresini desteklemelidir; bu parametre belirtildiğinde DilTespitMotoru otomatik tespiti bu değerle geçersiz kılabilir.
 
 11. FOR ALL geçerli PDF girişleri, THE DilTespitMotoru SHALL dil analizi sonucunu `getResultJson()` çıktısının `signed_contract` nesnesine `language_analysis` alanı olarak eklemeli; bu alan `multilingual` (boolean), `active_language` (string) ve `columns` (dizi) bilgilerini içermelidir.
+
+---
+
+### Requirement 21: Veri Saklama ve Geçici Dosya Temizliği
+
+**User Story:** Bir sistem yöneticisi olarak, işlenen sözleşmelere ait hassas görüntülerin ve geçici dosyaların gereksiz yere diskte kalmamasını istiyorum; böylece kişisel veri saklama yükümlülüklerine (KVKK/GDPR) uyum sağlayabileyim.
+
+#### Acceptance Criteria
+
+1. THE Sistem SHALL PDF sayfa görüntüleri, kırpılmış clause-image ve imza görüntüleri gibi geçici dosyaları işlem tamamlandıktan sonra yapılandırılabilir bir `RETENTION_SECONDS` süresi içinde diskten silmelidir.
+2. WHERE `RETENTION_SECONDS` yapılandırma dosyasında belirtilmemişse, THE Sistem SHALL geçici dosyaları `start()` tamamlandığı anda (0 saniye) silmelidir.
+3. THE Sistem SHALL `getResultJson()` çıktısındaki Base64 gömülü görüntüleri bellekte tutmalı; bu görüntülerin kaynağı olan diskteki ara dosyalarla karıştırılmamalıdır (Base64 içerikler silme işleminden etkilenmemelidir).
+4. IF geçici dosya silme işlemi başarısız olursa, THEN THE Sistem SHALL bu durumu WARN seviyesinde günlüğe kaydetmeli ve pipeline'ı durdurmamalıdır.
+5. THE PythonOcrMicroservice SHALL her istek sonrası kendi tarafında oluşturduğu geçici dosyaları (varsa) istek tamamlandığında otomatik silmelidir.
+
+---
+
+### Requirement 22: Girdi Güvenliği ve Boyut Sınırları
+
+**User Story:** Bir sistem yöneticisi olarak, kötü amaçlı veya aşırı büyük dosyaların sistemi kilitlememesini veya güvenlik açığı oluşturmamasını istiyorum.
+
+#### Acceptance Criteria
+
+1. THE Sistem SHALL yüklenen PDF ve DOCX dosyaları için yapılandırılabilir bir `MAX_FILE_SIZE_MB` üst sınırı uygulamalıdır; varsayılan değer 100 MB olmalıdır.
+2. IF yüklenen dosya `MAX_FILE_SIZE_MB` sınırını aşarsa, THEN THE Sistem SHALL dosyayı işlemeden `IllegalArgumentException` fırlatmalı ve sınırı aştığını belirten bir mesaj döndürmelidir.
+3. THE DOCX_İşleyici SHALL Apache POI ile dosya ayrıştırırken XML External Entity (XXE) saldırılarına karşı güvenli ayrıştırma yapılandırması (external entity resolution kapalı) kullanmalıdır.
+4. THE PDF_İşleyici SHALL şifreli/parola korumalı PDF dosyalarını tespit etmeli; böyle bir dosya yüklendiğinde kullanıcıya "Şifreli PDF desteklenmemektedir" hata mesajı döndürmelidir.
+5. THE PythonOcrMicroservice SHALL gelen istek gövdesi (request body) için yapılandırılabilir bir maksimum boyut sınırı uygulamalı; aşan istekleri 413 Payload Too Large ile reddetmelidir.
+
+---
+
+### Requirement 23: Eşzamanlılık Kontrolü ve Oran Sınırlama (Rate Limiting)
+
+**User Story:** Bir sistem yöneticisi olarak, çok sayıda maddesi olan sözleşmelerde AI ve OCR servislerine yapılan paralel çağrıların harici servis oran sınırlarını aşmamasını istiyorum.
+
+#### Acceptance Criteria
+
+1. THE Sistem SHALL AiAdapter'a yapılan eşzamanlı çağrı sayısını sınırlayan bir RateLimiter kullanmalıdır; maksimum eşzamanlı çağrı sayısı yapılandırma dosyasından `AI_MAX_CONCURRENCY` anahtarıyla okunmalıdır (varsayılan: 5).
+2. THE Sistem SHALL OcrAdapter'a yapılan eşzamanlı çağrı sayısını sınırlayan bir RateLimiter kullanmalıdır; maksimum eşzamanlı çağrı sayısı `OCR_MAX_CONCURRENCY` anahtarıyla okunmalıdır (varsayılan: 3).
+3. IF harici bir AI veya OCR servisi oran sınırlama hatası (örn. HTTP 429) döndürürse, THEN THE Sistem SHALL üstel geri çekilme (exponential backoff) ile en fazla 3 kez yeniden denemelidir.
+4. IF yeniden deneme sınırına ulaşıldıktan sonra hata devam ederse, THEN THE AI_Karşılaştırıcı veya OCR_Motoru ilgili madde/sayfa için hatayı Req 11.7 / Req 4.8'de tanımlanan şekilde işlemeye devam etmelidir.
+5. THE `ContractAnalyzer.start()` method'u SHALL aynı instance üzerinde ardışık olarak yalnızca bir kez çalıştırılabilir olmalıdır; `start()` daha önce başarıyla veya başarısız tamamlanmış bir instance üzerinde tekrar çağrılırsa `IllegalStateException` fırlatmalıdır.
+
+---
+
+### Requirement 24: Uyarı ve Kısmi Hata Raporlama API'si
+
+**User Story:** Bir Java geliştiricisi olarak, pipeline sırasında oluşan kritik olmayan uyarıları (örn. tespit edilemeyen madde, okunamayan imzacı adı) log dosyasına gitmeden programatik olarak erişebilmek istiyorum.
+
+#### Acceptance Criteria
+
+1. THE `ContractAnalyzer` sınıfı SHALL `getWarnings()` adında bir method sunmalıdır; bu method pipeline sırasında biriken tüm `AnalysisWarning` nesnelerini bir liste olarak döndürmelidir.
+2. WHEN Madde_Tespit_Motoru, OCR_Motoru, İmza_Tespit_Motoru veya AI_Karşılaştırıcı kritik olmayan bir durumla karşılaştığında (Req 2.5, 4.8, 6.4, 11.7'de tanımlanan durumlar), THE ilgili bileşen SHALL bu durumu bir `AnalysisWarning` nesnesi olarak `getWarnings()` listesine eklemelidir.
+3. THE `AnalysisWarning` nesnesi SHALL `component` (bileşen adı), `severity` (WARN/ERROR) ve `message` (açıklayıcı metin) alanlarını içermelidir.
+4. IF `start()` henüz çağrılmamışsa, THEN `getWarnings()` method'u SHALL boş bir liste döndürmelidir.
+
+---
+
+### Requirement 25: Yapılandırma Şeması Doğrulama
+
+**User Story:** Bir Java geliştiricisi olarak, `config()` metoduna geçersiz bir değer verdiğimde bunu çalışma zamanında anlamlı bir hata mesajıyla öğrenmek istiyorum, sessizce yanlış davranan bir sistem yerine.
+
+#### Acceptance Criteria
+
+1. THE `config(JSONObject config)` method'u SHALL bir ConfigValidator aracılığıyla girdi şemasını doğrulamalıdır.
+2. IF `"OCR"` alanında Req 15.1'de tanımlanan geçerli adaptör türlerinden biri dışında bir değer verilirse, THEN THE `config()` method'u SHALL `IllegalArgumentException` fırlatmalı ve geçerli değerleri listeleyen bir mesaj döndürmelidir.
+3. IF `"AI"` alanında Req 11.2'de tanımlanan geçerli adaptör türlerinden biri dışında bir değer verilirse, THEN THE `config()` method'u SHALL `IllegalArgumentException` fırlatmalıdır.
+4. IF `"BBOX_MARGIN"` negatif bir sayı olarak verilirse, THEN THE `config()` method'u SHALL `IllegalArgumentException` fırlatmalıdır.
+5. THE ConfigValidator SHALL seçilen adaptör için zorunlu olan `OCR_CONFIG` / `AI_CONFIG` alt alanlarının (örn. `endpoint`, `api-key`) eksik olup olmadığını `start()` çağrılmadan önce, `config()` içinde kontrol etmelidir.
+
+---
+
+### Requirement 26: Rapor Boyutu Yönetimi
+
+**User Story:** Bir Java geliştiricisi olarak, çok sayıda madde içeren büyük sözleşmelerde üretilen JSON/HTML/PDF raporlarının makul boyutta kalmasını istiyorum.
+
+#### Acceptance Criteria
+
+1. THE Python microservisi (ImageCropService) SHALL clause-image ve imza görüntülerini kırparken `MAX_IMAGE_DIMENSION_PX` değerine göre yeniden ölçeklendirmelidir (varsayılan: uzun kenar 2000px); bu parametre `/image/crop` endpoint'ine `max_dimension_px` olarak iletilir.
+2. THE Python microservisi (ImageCropService) SHALL görüntüleri `IMAGE_COMPRESSION_QUALITY` (0.0–1.0 arası, JPEG için) ile sıkıştırmalıdır; varsayılan değer 0.85 olmalıdır; bu parametre `/image/crop` endpoint'ine `compression_quality` olarak iletilir.
+3. IF üretilen `getResultJson()` çıktısının toplam boyutu yapılandırılabilir bir `MAX_RESULT_SIZE_MB` sınırını aşarsa, THEN THE Sistem SHALL bu durumu WARN seviyesinde günlüğe kaydetmeli; işlemi durdurmamalıdır.
+
+---
+
+### Requirement 30: Rapor Üretiminde Fallback Mekanizması
+
+**User Story:** Bir Java geliştiricisi olarak, ReportMicroservice'e erişilemediği durumlarda bile temel bir HTML raporu üretebilmek istiyorum; böylece PDF rapor mikroservis kesintisinde iş sürekliliğim tamamen durmasın.
+
+#### Acceptance Criteria
+
+1. WHEN `exportHtml(String outputFilePath)` çağrıldığında ve ReportMicroservice'e HTTP isteği bağlantı hatası (timeout, connection refused) ile başarısız olursa, THE `ContractAnalyzer` SHALL flexmark-all kullanarak yerel bir fallback HTML raporu üretmelidir.
+2. THE fallback HTML raporu SHALL Req 17.5'te tanımlanan aynı kolonları (Madde No, Clause Image, Signed Content, Original Content, Java Diff, AI Diff) içermelidir; ancak stil/tema ReportTemplate ile birebir aynı olmak zorunda değildir.
+3. WHEN fallback HTML raporu üretildiğinde, THE `ContractAnalyzer` SHALL bu durumu `getWarnings()` listesine "ReportMicroservice erişilemedi, yerel fallback rapor kullanıldı" mesajıyla bir `AnalysisWarning` olarak eklemelidir.
+4. THE fallback mekanizması SHALL yalnızca bağlantı/erişilebilirlik hatalarında (5xx sunucu hatası veya bağlantı reddi) devreye girmelidir; ReportMicroservice 401 Unauthorized döndürürse (yanlış ReportServiceApiKey) fallback'e düşülmemeli, bunun yerine kimlik doğrulama hatası doğrudan çağırana iletilmelidir.
+5. IF `exportPdf(String outputFilePath)` çağrıldığında ReportMicroservice'e erişilemezse, THEN THE `ContractAnalyzer` SHALL flexmark-all ile üretilen fallback HTML'i, yerel olarak (openhtmltopdf ile) PDF'e dönüştürmeye çalışmalıdır.
+6. IF hem ReportMicroservice hem de yerel PDF dönüştürme başarısız olursa, THEN THE `exportPdf()` method'u SHALL `ContractAnalysisException` fırlatmalıdır.
+
+---
+
+### Requirement 27: Sağlık Kontrolü Endpoint'i
+
+**User Story:** Bir sistem yöneticisi olarak, PythonOcrMicroservice'in çalışır durumda olup olmadığını kimlik doğrulaması gerektirmeden hızlıca kontrol edebilmek istiyorum.
+
+#### Acceptance Criteria
+
+1. THE PythonOcrMicroservice SHALL kimlik doğrulaması gerektirmeyen bir `/health` endpoint'i sunmalıdır.
+2. WHEN `/health` endpoint'ine GET isteği yapıldığında, THE PythonOcrMicroservice SHALL servisin ayakta olduğunu belirten `{"status": "ok"}` yanıtını HTTP 200 ile döndürmelidir.
+3. THE `/health` endpoint'i SHALL OcrServiceApiKey doğrulamasına tabi olmamalıdır.
+
+---
+
+### Requirement 28: Log Formatı ve Hedefi
+
+**User Story:** Bir sistem yöneticisi olarak, günlük kayıtlarının nereye yazıldığını ve hangi formatta olduğunu net olarak bilmek istiyorum; böylece izleme/alerting sistemlerime entegre edebileyim.
+
+#### Acceptance Criteria
+
+1. THE Sistem SHALL log çıktısını hem konsola (stdout) hem de yapılandırılabilir bir dosya yoluna (`LOG_FILE_PATH`) yazmalıdır.
+2. WHERE `LOG_FILE_PATH` belirtilmemişse, THE Sistem SHALL logları yalnızca konsola yazmalıdır.
+3. THE Sistem SHALL her log satırında en az şu alanları içermelidir: zaman damgası (ISO-8601), log seviyesi, bileşen adı, mesaj.
+4. THE Sistem SHALL yapılandırılabilir bir `LOG_FORMAT` parametresi desteklemelidir (`plain` | `json`); `json` seçildiğinde her log satırı geçerli bir JSON nesnesi olarak yazılmalıdır.
+5. THE PythonOcrMicroservice SHALL kendi loglarını `.env` dosyasındaki `LOG_LEVEL` parametresine uygun şekilde, Java tarafındaki `LOG_FORMAT` ile tutarlı bir formatta üretmelidir (mümkünse JSON structured logging).
+
+---
+
+### Requirement 29: Aynı Madde Numarasının Birden Fazla Bölümde Tekrarı
+
+**User Story:** Bir analist olarak, ek protokollerde ana metinle aynı madde numaralandırmasının tekrar kullanıldığı durumların doğru şekilde ayrıştırılmasını istiyorum; böylece raporda madde çakışması/veri kaybı yaşanmasın.
+
+#### Acceptance Criteria
+
+1. THE Madde_Tespit_Motoru ve DOCX_İşleyici SHALL ana sözleşme metni ile Ek Protokol bölümlerini ayrı ad alanları (namespace) olarak ele almalıdır; Ek Protokol içindeki madde numaraları `clauses` nesnesine dahil edilmemeli, bunun yerine `additional` dizisine uygun `type` etiketiyle eklenmelidir (Req 7.4, 9.6 ile tutarlı).
+2. IF ana sözleşme metninin kendi içinde aynı madde numarası (örn. iki farklı "5" maddesi) birden fazla kez tespit edilirse, THEN THE Madde_Tespit_Motoru SHALL bu durumu ERROR seviyesinde günlüğe kaydetmeli ve ikinci tekrarı `"5-duplicate-1"` gibi bir sonek ile ayırt edici bir anahtarla `clauses` nesnesine eklemelidir.
+3. THE Rapor_Üretici SHALL bu şekilde sonek almış maddeleri de doğal sıralama kuralına (Req 7.3) tabi tutmalı, ancak orijinal madde numarasının hemen ardına yerleştirmelidir.
